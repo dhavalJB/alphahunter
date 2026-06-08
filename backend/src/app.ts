@@ -50,6 +50,15 @@ logStartupDiagnostics();
 validateTonCenterKeyAtStartup().finally(() => {
   app.listen(PORT, () => {
     console.log(`AlphaHunter API running on http://localhost:${PORT}`);
+
+    setInterval(async () => {
+      try {
+        await fetch(`http://localhost:${PORT}/health`);
+        console.log("keep_alive_ping_success");
+      } catch {
+        console.log("keep_alive_ping_failed");
+      }
+    }, 20000);
   });
 });
 
