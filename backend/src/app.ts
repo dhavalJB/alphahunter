@@ -42,8 +42,6 @@ app.use(
   })
 );
 
-app.options("*", cors());
-
 app.use(express.json());
 app.use(requestPerfMiddleware);
 
@@ -69,12 +67,11 @@ validateTonCenterKeyAtStartup().finally(() => {
   app.listen(PORT, () => {
     console.log(`AlphaHunter API running on port ${PORT}`);
 
-    // Self-ping every 20s
     setInterval(async () => {
       try {
-        const url = `http://127.0.0.1:${PORT}/health`;
-
-        const response = await fetch(url);
+        const response = await fetch(
+          `http://127.0.0.1:${PORT}/health`
+        );
 
         console.log(
           JSON.stringify({
