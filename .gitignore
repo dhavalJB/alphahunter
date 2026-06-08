@@ -6,3 +6,5 @@ dist
 .env.production
 coverage
 .vercel
+# Local Netlify folder
+.netlify

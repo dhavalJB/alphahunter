@@ -18,14 +18,32 @@ import routeRouter from "./routes/route";
 import walletIntelligenceRouter from "./routes/walletIntelligence";
 
 const app = express();
-const PORT = process.env.PORT ?? 4000;
-const CORS_ORIGIN = process.env.CORS_ORIGIN ?? "http://localhost:3000";
+const PORT = Number(process.env.PORT ?? 4000);
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://alphahunter-orpin.vercel.app",
+  "https://alphahunter-9j7oxcguy-trustledger7-6929s-projects.vercel.app",
+];
 
 app.use(
   cors({
-    origin: CORS_ORIGIN,
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked: ${origin}`));
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true,
   })
 );
+
+app.options("*", cors());
+
 app.use(express.json());
 app.use(requestPerfMiddleware);
 
@@ -49,14 +67,31 @@ logStartupDiagnostics();
 
 validateTonCenterKeyAtStartup().finally(() => {
   app.listen(PORT, () => {
-    console.log(`AlphaHunter API running on http://localhost:${PORT}`);
+    console.log(`AlphaHunter API running on port ${PORT}`);
 
+    // Self-ping every 20s
     setInterval(async () => {
       try {
-        await fetch(`http://localhost:${PORT}/health`);
-        console.log("keep_alive_ping_success");
-      } catch {
-        console.log("keep_alive_ping_failed");
+        const url = `http://127.0.0.1:${PORT}/health`;
+
+        const response = await fetch(url);
+
+        console.log(
+          JSON.stringify({
+            event: "keep_alive_ping",
+            status: response.status,
+            success: true,
+          })
+        );
+      } catch (error) {
+        console.error(
+          JSON.stringify({
+            event: "keep_alive_ping",
+            success: false,
+            error:
+              error instanceof Error ? error.message : "unknown_error",
+          })
+        );
       }
     }, 20000);
   });
